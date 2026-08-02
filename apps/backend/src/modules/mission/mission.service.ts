@@ -124,7 +124,7 @@ export async function detectMission(cartId?: string, sessionId?: string): Promis
   const missions = await prisma.mission.findMany();
 
   const currentHour = new Date().getHours();
-  const timeOfDayStr = currentHour >= 5 && currentHour < 12 ? 'Morning' : currentHour >= 12 && currentHour < 17 ? 'Afternoon' : 'Evening';
+  const timeOfDayStr = currentHour >= 4 && currentHour < 12 ? 'Morning' : currentHour >= 12 && currentHour < 17 ? 'Afternoon' : 'Evening';
 
   let topMissionKey: string | null = null;
   let topDisplayName = 'General Browsing';
@@ -168,7 +168,7 @@ export async function detectMission(cartId?: string, sessionId?: string): Promis
     }
 
     // 3. Time of day prior
-    if (m.key === 'breakfast' && currentHour >= 5 && currentHour <= 11) {
+    if (m.key === 'breakfast' && currentHour >= 4 && currentHour <= 11) {
       score += 0.20;
       signals.push('Morning shopping time prior (+20%)');
     } else if (m.key === 'dinner_prep' && currentHour >= 16 && currentHour <= 21) {

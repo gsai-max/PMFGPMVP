@@ -4,13 +4,15 @@
   "private": true,
   "main": "dist/main.js",
   "scripts": {
+    "prebuild": "node prisma/select-schema.js",
     "build": "tsc && npx prisma generate",
     "start": "node dist/main.js",
-    "dev": "nodemon --watch src -e ts --exec ts-node src/main.ts",
+    "dev": "node prisma/select-schema.js && nodemon --watch src -e ts --exec ts-node src/main.ts",
     "test": "jest --passWithNoTests",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "ts-node prisma/seed.ts"
+    "prisma:generate": "node prisma/select-schema.js && prisma generate",
+    "prisma:migrate": "node prisma/select-schema.js && prisma migrate dev",
+    "prisma:db:push": "node prisma/select-schema.js && prisma db push --accept-data-loss",
+    "prisma:seed": "node prisma/select-schema.js && ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.10.0",
