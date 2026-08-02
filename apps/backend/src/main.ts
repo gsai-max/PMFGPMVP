@@ -39,17 +39,17 @@ app.use((err: any, req: Request, res: Response, next: any) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 BlinkClone Backend API running on port ${PORT}`);
+  console.log(`🚀 BlinkClone Backend API running on 0.0.0.0:${PORT}`);
 
-  // Background DB sync and seed for PostgreSQL/Railway
+  // Background DB seed for PostgreSQL/Railway
   if (process.env.DATABASE_URL?.includes('postgres')) {
-    console.log('🔄 PostgreSQL DATABASE_URL detected. Running schema sync and seed engine in background...');
-    const prismaDir = path.join(__dirname, '../prisma');
-    exec('node select-schema.js && npx prisma db push --accept-data-loss && npx ts-node seed.ts', { cwd: prismaDir }, (err, stdout, stderr) => {
+    console.log('🔄 PostgreSQL DATABASE_URL detected. Running pre-compiled seed engine in background...');
+    const seedScript = path.join(__dirname, 'prisma/seed.js');
+    exec(`node "${seedScript}"`, (err, stdout, stderr) => {
       if (err) {
-        console.error('⚠️ DB Initialization error:', err.message);
+        console.error('⚠️ DB Seed Error:', err.message);
       } else {
-        console.log('✅ DB Schema synced and seeded successfully!');
+        console.log('✅ DB Catalog seeded successfully!');
       }
     });
   }

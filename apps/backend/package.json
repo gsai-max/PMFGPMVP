@@ -5,14 +5,14 @@
   "main": "dist/main.js",
   "scripts": {
     "prebuild": "node prisma/select-schema.js",
-    "build": "tsc && npx prisma generate",
+    "build": "tsc && npx tsc prisma/seed.ts --outDir dist/prisma --module CommonJS --target ES2022 --moduleResolution node --esModuleInterop --skipLibCheck && npx prisma generate",
     "start": "node dist/main.js",
     "dev": "node prisma/select-schema.js && nodemon --watch src -e ts --exec ts-node src/main.ts",
     "test": "jest --passWithNoTests",
     "prisma:generate": "node prisma/select-schema.js && prisma generate",
     "prisma:migrate": "node prisma/select-schema.js && prisma migrate dev",
     "prisma:db:push": "node prisma/select-schema.js && prisma db push --accept-data-loss",
-    "prisma:seed": "node prisma/select-schema.js && ts-node prisma/seed.ts"
+    "prisma:seed": "node prisma/select-schema.js && node dist/prisma/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^5.10.0",

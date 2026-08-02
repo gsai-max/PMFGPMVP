@@ -14,7 +14,7 @@ RUN npm ci
 # Copy full repository source
 COPY . .
 
-# Select schema & build backend workspace
+# Select schema & build backend workspace (compiles main.ts and seed.ts)
 RUN npm run build --workspace=apps/backend
 
 # Expose API port
@@ -22,5 +22,5 @@ EXPOSE 4000
 
 ENV NODE_ENV=production
 
-# Start API server immediately to pass Railway healthcheck
-CMD ["npm", "run", "start", "--workspace=apps/backend"]
+# Fast container startup: sync DB schema in ~1s then start API server immediately
+CMD ["sh", "-c", "npx prisma db push --schema=apps/backend/prisma/schema.prisma --accept-data-loss && npm run start --workspace=apps/backend"]
