@@ -1,0 +1,11 @@
+[providers]
+providers = ["node"]
+
+[build]
+cmds = [
+  "npm ci",
+  "npm run build"
+]
+
+[start]
+cmd = "npm start"

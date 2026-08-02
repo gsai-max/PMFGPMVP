@@ -22,5 +22,5 @@ EXPOSE 4000
 
 ENV NODE_ENV=production
 
-# Fast container startup: sync DB schema in ~1s then start API server immediately
-CMD ["sh", "-c", "npx prisma db push --schema=apps/backend/prisma/schema.prisma --accept-data-loss && npm run start --workspace=apps/backend"]
+# Fast container startup: start API server in 1s for instant healthcheck pass
+CMD ["node", "apps/backend/dist/main.js"]
