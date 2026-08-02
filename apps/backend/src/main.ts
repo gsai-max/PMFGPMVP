@@ -2,6 +2,8 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import { exec } from 'child_process';
+import path from 'path';
 import authRouter from './modules/auth/auth.router';
 import catalogRouter from './modules/catalog/catalog.router';
 import cartRouter from './modules/cart/cart.router';
@@ -37,5 +39,18 @@ app.use((err: any, req: Request, res: Response, next: any) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 BlinkClone Backend API running on http://localhost:${PORT}`);
+  console.log(`🚀 BlinkClone Backend API running on port ${PORT}`);
+
+  // Background DB sync and seed for PostgreSQL/Railway
+  if (process.env.DATABASE_URL?.includes('postgres')) {
+    console.log('🔄 PostgreSQL DATABASE_URL detected. Running schema sync and seed engine in background...');
+    const prismaDir = path.join(__dirname, '../prisma');
+    exec('node select-schema.js && npx prisma db push --accept-data-loss && npx ts-node seed.ts', { cwd: prismaDir }, (err, stdout, stderr) => {
+      if (err) {
+        console.error('⚠️ DB Initialization error:', err.message);
+      } else {
+        console.log('✅ DB Schema synced and seeded successfully!');
+      }
+    });
+  }
 });

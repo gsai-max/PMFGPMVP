@@ -22,5 +22,5 @@ EXPOSE 4000
 
 ENV NODE_ENV=production
 
-# Run schema push, seed engine, and start API server
-CMD ["sh", "-c", "npm run prisma:db:push --workspace=apps/backend && npm run prisma:seed --workspace=apps/backend && npm run start --workspace=apps/backend"]
+# Start API server immediately to pass Railway healthcheck
+CMD ["npm", "run", "start", "--workspace=apps/backend"]
