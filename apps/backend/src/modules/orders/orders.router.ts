@@ -29,7 +29,7 @@ router.post('/orders', authenticateJWT, async (req: AuthRequest, res: Response) 
       return res.status(400).json({ error: 'Cart is empty or not found' });
     }
 
-    const subtotal = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    const subtotal = cart.items.reduce((sum: number, item: any) => sum + item.product.price * item.quantity, 0);
     const deliveryFee = subtotal > 299 ? 0 : 25;
     const totalAmount = Math.max(0, subtotal - discountAmount + deliveryFee);
 
@@ -59,7 +59,7 @@ router.post('/orders', authenticateJWT, async (req: AuthRequest, res: Response) 
         status: 'PLACED',
         paymentStatus: 'PAID',
         items: {
-          create: cart.items.map((i) => ({
+          create: cart.items.map((i: any) => ({
             productId: i.productId,
             quantity: i.quantity,
             priceAtPurchase: i.product.price,
@@ -98,7 +98,7 @@ router.get('/orders', authenticateJWT, async (req: AuthRequest, res: Response) =
     });
 
     // Calculate dynamic status for each order based on elapsed time
-    const updatedOrders = orders.map((order) => {
+    const updatedOrders = orders.map((order: any) => {
       const elapsedMinutes = (Date.now() - new Date(order.placedAt).getTime()) / (1000 * 60);
       let dynamicStatus = 'PLACED';
       if (elapsedMinutes > 1) dynamicStatus = 'PACKED';
@@ -151,7 +151,7 @@ router.post('/orders/:id/reorder', authenticateJWT, async (req: AuthRequest, res
         userId: req.user?.id || null,
         status: 'ACTIVE',
         items: {
-          create: order.items.map((i) => ({
+          create: order.items.map((i: any) => ({
             productId: i.productId,
             quantity: i.quantity,
           })),

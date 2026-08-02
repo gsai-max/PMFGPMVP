@@ -228,7 +228,7 @@ export async function getMissionRecommendations(missionKey?: string, cartId?: st
       include: { items: { include: { product: true } } },
     });
     if (cart) {
-      cart.items.forEach((i) => cartSubcategories.add(i.product.subcategory));
+      cart.items.forEach((i: any) => cartSubcategories.add(i.product.subcategory));
     }
   }
 
@@ -295,7 +295,7 @@ export async function getMissionCompletion(cartId?: string, missionKey?: string)
     return { completionPercentage: 100, missingSlots: [], suggestedItems: [], mission: targetMission };
   }
 
-  const activeSubcategories = new Set(cart.items.map((i) => i.product.subcategory));
+  const activeSubcategories = new Set(cart.items.map((i: any) => i.product.subcategory));
 
   let filledSlots = 0;
   const missingSlots: string[] = [];
