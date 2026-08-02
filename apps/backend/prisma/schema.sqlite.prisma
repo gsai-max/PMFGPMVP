@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String               @id @default(uuid())
+  name         String
+  email        String               @unique
+  passwordHash String
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  addresses    Address[]
+  carts        Cart[]
+  orders       Order[]
+  events       MissionSignalEvent[]
+}
+
+model Address {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  line1     String
+  city      String
+  pincode   String
+  isDefault Boolean  @default(true)
+  orders    Order[]
+}
+
+model Category {
+  id        String     @id @default(uuid())
+  name      String
+  slug      String     @unique
+  parentId  String?
+  parent    Category?  @relation("SubCategories", fields: [parentId], references: [id])
+  children  Category[] @relation("SubCategories")
+  imageUrl  String?
+  products  Product[]
+}
+
+model Product {
+  id          String      @id @default(uuid())
+  name        String
+  slug        String      @unique
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id])
+  subcategory String
+  price       Float
+  mrp         Float
+  unit        String
+  imageUrl    String
+  description String?
+  missionTags String      @default("[]")
+  stockQty    Int         @default(100)
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String?
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  status    String     @default("ACTIVE") // ACTIVE, CHECKED_OUT, ABANDONED
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  orders    Order[]
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(1)
+}
+
+model Order {
+  id             String      @id @default(uuid())
+  userId         String?
+  user           User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  cartId         String?
+  cart           Cart?       @relation(fields: [cartId], references: [id], onDelete: SetNull)
+  addressId      String?
+  address        Address?    @relation(fields: [addressId], references: [id], onDelete: SetNull)
+  totalAmount    Float
+  discountAmount Float       @default(0.0)
+  deliveryFee    Float       @default(0.0)
+  status         String      @default("PLACED") // PLACED, PACKED, OUT_FOR_DELIVERY, DELIVERED
+  paymentStatus  String      @default("PAID") // SIMULATED_PAID
+  placedAt       DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  items          OrderItem[]
+}
+
+model OrderItem {
+  id               String   @id @default(uuid())
+  orderId          String
+  order            Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId        String
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity         Int
+  priceAtPurchase Float
+}
+
+model Coupon {
+  id           String  @id @default(uuid())
+  code         String  @unique
+  discountType String  // PERCENTAGE, FLAT
+  value        Float
+  minCartValue Float   @default(0.0)
+  active       Boolean @default(true)
+}
+
+model Mission {
+  id                   String   @id @default(uuid())
+  key                  String   @unique
+  displayName          String
+  checklistCategories String   @default("[]")
+  icon                 String?
+}
+
+model MissionSignalEvent {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sessionId   String?
+  eventType   String   // SEARCH, ADD_TO_CART, VIEW_PRODUCT
+  payloadJson String   @default("{}")
+  createdAt   DateTime @default(now())
+}
