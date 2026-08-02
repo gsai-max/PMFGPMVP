@@ -13,7 +13,7 @@ import missionRouter from './modules/mission/mission.router';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = Number(process.env.PORT) || 4000;
 
 // Middleware
 app.use(cors({ origin: '*' }));
@@ -38,7 +38,7 @@ app.use((err: any, req: Request, res: Response, next: any) => {
   res.status(500).json({ error: 'Internal Server Error', message: err.message });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 BlinkClone Backend API running on port ${PORT}`);
 
   // Background DB sync and seed for PostgreSQL/Railway
