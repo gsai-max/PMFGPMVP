@@ -6,73 +6,85 @@ import { useCartStore } from '../../store/cartStore';
 
 interface MissionCategoryConfig {
   displayName: string;
-  subcategories: Array<{ id: string; name: string; icon: string; query?: string }>;
+  subcategories: Array<{ id: string; name: string; icon: string; query?: string; isAdjacent?: boolean }>;
 }
 
 const MISSION_CATEGORIES: Record<string, MissionCategoryConfig> = {
   breakfast: {
     displayName: 'Breakfast Prep',
     subcategories: [
-      { id: 'dosa_batter', name: 'Dosa & Idli Batter', icon: '🥞', query: 'batter' },
-      { id: 'milk_dairy', name: 'Fresh Milk & Curd', icon: '🥛', query: 'milk' },
-      { id: 'eggs', name: 'Eggs & Omelet', icon: '🍳', query: 'eggs' },
-      { id: 'oats_muesli', name: 'Oats & Muesli', icon: '🥣', query: 'oats' },
-      { id: 'protein_powder', name: 'Protein & Health', icon: '🏋️', query: 'protein' },
-      { id: 'fresh_fruits', name: 'Fresh Fruits', icon: '🍌', query: 'banana' },
-      { id: 'juices', name: 'Juices & Smoothies', icon: '🥤', query: 'juice' },
-      { id: 'bread', name: 'Bread & Spreads', icon: '🍞', query: 'bread' },
+      { id: 'staples', name: 'Staples (Bread, Eggs, Milk, Butter)', icon: '🍞', query: 'bread' },
+      { id: 'cereals_spreads', name: 'Cereal & Spreads (Muesli, Jam, Honey)', icon: '🥣', query: 'oats' },
+      { id: 'beverages', name: 'Beverages (Tea, Coffee, Bournvita)', icon: '☕', query: 'tea' },
+      { id: 'quick_prep', name: 'Quick-prep (Poha, Upma, Parathas)', icon: '🥞', query: 'poha' },
+      { id: 'adjacent_gap', name: 'Adjacent Gap (Napkins, Dish Soap)', icon: '🧻', query: 'napkins', isAdjacent: true },
+    ],
+  },
+  meal_prep: {
+    displayName: 'Meal Prep',
+    subcategories: [
+      { id: 'produce', name: 'Fresh Produce (Veggies, Fruits, Herbs)', icon: '🥬', query: 'onion' },
+      { id: 'proteins', name: 'Proteins (Chicken, Paneer, Eggs)', icon: '🍗', query: 'paneer' },
+      { id: 'pantry_basics', name: 'Pantry Basics (Oil, Atta, Rice, Spices)', icon: '🌾', query: 'atta' },
+      { id: 'tools_storage', name: 'Tools & Storage (Boards, Cling Wrap)', icon: '🔪', query: 'wrap' },
+      { id: 'adjacent_gap', name: 'Adjacent Gap (Kitchen Gloves, Trash Bags)', icon: '🧤', query: 'gloves', isAdjacent: true },
     ],
   },
   dinner_prep: {
     displayName: 'Dinner Cooking',
     subcategories: [
-      { id: 'atta_flours', name: 'Atta & Flours', icon: '🌾', query: 'atta' },
-      { id: 'dal_pulses', name: 'Dal & Pulses', icon: '🫘', query: 'dal' },
-      { id: 'oils_ghee', name: 'Oils & Ghee', icon: '🫕', query: 'oil' },
-      { id: 'veggies', name: 'Fresh Vegetables', icon: '🧅', query: 'onion' },
-      { id: 'masalas', name: 'Spices & Masalas', icon: '🌶️', query: 'masala' },
-    ],
-  },
-  movie_night: {
-    displayName: 'Movie Night',
-    subcategories: [
-      { id: 'chips', name: 'Chips & Namkeen', icon: '🍿', query: 'chips' },
-      { id: 'chocolates', name: 'Chocolates & Sweets', icon: '🍫', query: 'chocolate' },
-      { id: 'cold_drinks', name: 'Cold Drinks & Sodas', icon: '🥤', query: 'coca-cola' },
-      { id: 'frozen_snacks', name: 'Frozen Snacks', icon: '🍟', query: 'fries' },
+      { id: 'core_ingredients', name: 'Core Ingredients (Rice, Dal, Veggies, Meat)', icon: '🍚', query: 'dal' },
+      { id: 'spices_masalas', name: 'Spices & Masalas (Garam Masala, Pastes)', icon: '🌶️', query: 'masala' },
+      { id: 'cooking_essentials', name: 'Essentials (Ghee, Oil, Coconut Milk)', icon: '🫕', query: 'ghee' },
+      { id: 'accompaniments', name: 'Accompaniments (Pickles, Papad, Curd)', icon: '🥒', query: 'curd' },
+      { id: 'adjacent_gap', name: 'Adjacent Gap (Dishwash & Storage Containers)', icon: '🧽', query: 'dishwash', isAdjacent: true },
     ],
   },
   monthly_grocery: {
     displayName: 'Monthly Restock',
     subcategories: [
-      { id: 'rice_atta', name: 'Rice & Atta', icon: '🌾', query: 'rice' },
-      { id: 'cleaning', name: 'Cleaning Essentials', icon: '🧼', query: 'detergent' },
-      { id: 'personal_care', name: 'Personal Care', icon: '🧴', query: 'soap' },
-      { id: 'dairy_restock', name: 'Daily Dairy', icon: '🥛', query: 'milk' },
+      { id: 'grains_pulses', name: 'Grains & Pulses (Bulk Rice, Atta, Dal)', icon: '📦', query: 'rice' },
+      { id: 'personal_care', name: 'Personal Care (Shampoo, Soap, Dental)', icon: '🧴', query: 'shampoo' },
+      { id: 'home_care', name: 'Home Care (Detergent, Floor Cleaner)', icon: '🧹', query: 'detergent' },
+      { id: 'long_shelf_life', name: 'Long Shelf-Life (Oil & Ghee Packs)', icon: '🛢️', query: 'oil' },
+      { id: 'adjacent_gap', name: 'Adjacent Gap (Snack Packs, Water Purifier)', icon: '🚰', query: 'purifier', isAdjacent: true },
+    ],
+  },
+  movie_night: {
+    displayName: 'Movie Night',
+    subcategories: [
+      { id: 'snacks', name: 'Snacks (Popcorn, Chips, Nachos)', icon: '🍿', query: 'chips' },
+      { id: 'beverages', name: 'Beverages (Sodas, Juices, Mixers)', icon: '🥤', query: 'coca-cola' },
+      { id: 'indulgence', name: 'Indulgence (Ice Cream, Chocolates, Dips)', icon: '🍦', query: 'chocolate' },
+      { id: 'adjacent_gap', name: 'Adjacent Gap (Disposables, Tissues, Cables)', icon: '🔌', query: 'tissues', isAdjacent: true },
     ],
   },
   guest_arrival: {
     displayName: 'Hosting Guests',
     subcategories: [
-      { id: 'tea_coffee', name: 'Tea & Coffee', icon: '☕', query: 'tea' },
-      { id: 'juices_drinks', name: 'Juices & Beverages', icon: '🧃', query: 'juice' },
-      { id: 'biscuits', name: 'Cookies & Biscuits', icon: '🍪', query: 'biscuit' },
-      { id: 'party_snacks', name: 'Party Snacks', icon: '🥨', query: 'chips' },
+      { id: 'party_food', name: 'Party Food (Starters, Sweets)', icon: '🥟', query: 'starters' },
+      { id: 'welcome_drinks', name: 'Beverages (Juices, Mocktail Mixes)', icon: '🍹', query: 'juice' },
+      { id: 'disposables', name: 'Disposables (Plates, Cups, Cutlery)', icon: '🍽️', query: 'plates' },
+      { id: 'ambience', name: 'Ambience (Candles, Air Fresheners)', icon: '🕯️', query: 'freshener' },
+      { id: 'adjacent_gap', name: 'Adjacent Gap (Ice Cubes, Guest Toiletries)', icon: '🧊', query: 'ice', isAdjacent: true },
     ],
   },
   baby_care: {
     displayName: 'Baby Care',
     subcategories: [
-      { id: 'baby_food', name: 'Baby Food', icon: '🍼', query: 'cerelac' },
-      { id: 'diapers', name: 'Diapers & Wipes', icon: '👶', query: 'diaper' },
-      { id: 'baby_skin', name: 'Baby Skincare', icon: '🧴', query: 'lotion' },
+      { id: 'feeding', name: 'Feeding (Formula, Baby Food, Bottles)', icon: '🍼', query: 'cerelac' },
+      { id: 'hygiene', name: 'Hygiene (Diapers, Wipes, Baby Soap)', icon: '👶', query: 'diapers' },
+      { id: 'health', name: 'Health (Thermometer, Teething Gel)', icon: '🩺', query: 'saline' },
+      { id: 'adjacent_gap', name: 'Adjacent Gap (Baby Detergent, Repellent)', icon: '🛡️', query: 'baby detergent', isAdjacent: true },
     ],
   },
   pet_care: {
     displayName: 'Pet Care',
     subcategories: [
-      { id: 'dog_food', name: 'Dog Food & Treats', icon: '🐶', query: 'pedigree' },
-      { id: 'cat_care', name: 'Cat Care & Litter', icon: '🐱', query: 'whiskas' },
+      { id: 'food', name: 'Pet Food (Dry Food, Wet Treats)', icon: '🥩', query: 'pedigree' },
+      { id: 'hygiene', name: 'Hygiene (Shampoo, Litter, Poop Bags)', icon: '🦮', query: 'litter' },
+      { id: 'health', name: 'Health (Flea Treatment, Vitamins)', icon: '💊', query: 'vitamins' },
+      { id: 'adjacent_gap', name: 'Adjacent Gap (Pet Toys, Accident Cleaner)', icon: '🎾', query: 'toys', isAdjacent: true },
     ],
   },
 };
@@ -89,15 +101,15 @@ export const MissionCategoryRail: React.FC = () => {
         <div>
           <span className="bg-yellow-400 text-black font-black text-[10px] uppercase px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 shadow-sm">
             <Sparkles className="w-3 h-3 fill-black" />
-            AI MISSION-ALIGNED CATEGORIES
+            MISSION → SUBCATEGORY → PRODUCT CLUSTERING
           </span>
           <h2 className="text-xl font-black tracking-tight text-white mt-1 flex items-center gap-2">
             <Layers className="w-5 h-5 text-emerald-400" />
-            Categories for your {config.displayName}
+            Clustered Categories for {config.displayName}
           </h2>
         </div>
         <p className="text-xs text-emerald-200 font-medium">
-          1-Tap Intent Clustering • Tap any subcategory to filter items
+          Includes Core Staples & Mission Gap Adjacent Candidates
         </p>
       </div>
 
@@ -112,11 +124,18 @@ export const MissionCategoryRail: React.FC = () => {
               className={`px-3.5 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all transform active:scale-95 border ${
                 isActive
                   ? 'bg-yellow-400 text-black border-yellow-300 shadow-lg scale-105 ring-2 ring-yellow-400/50'
+                  : sub.isAdjacent
+                  ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border-amber-400/40 backdrop-blur-md'
                   : 'bg-white/10 hover:bg-white/20 text-white border-white/15 backdrop-blur-md'
               }`}
             >
               <span className="text-base">{sub.icon}</span>
               <span>{sub.name}</span>
+              {sub.isAdjacent && !isActive && (
+                <span className="bg-amber-400 text-black font-extrabold text-[9px] px-1.5 py-0.5 rounded-md uppercase">
+                  GAP CANDIDATE
+                </span>
+              )}
               {isActive && <CheckCircle className="w-3.5 h-3.5 fill-black text-yellow-400 ml-1" />}
             </button>
           );
