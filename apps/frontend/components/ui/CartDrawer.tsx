@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { X, Plus, Minus, ArrowRight, Tag, Clock, ShoppingBag } from 'lucide-react';
+import { X, Plus, Minus, ArrowRight, Tag, Clock, ShoppingBag, Truck, CheckCircle2 } from 'lucide-react';
 import { useCartStore } from '../../store/cartStore';
 import { MissionCompletionWidget } from '../mission/MissionCompletionWidget';
 
@@ -15,17 +15,25 @@ export const CartDrawer: React.FC = () => {
   if (!isCartOpen) return null;
 
   const subtotal = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
-  const deliveryFee = subtotal === 0 || subtotal > 299 ? 0 : 25;
+  const FREE_DELIVERY_THRESHOLD = 299;
+  const freeDeliveryDiff = Math.max(0, FREE_DELIVERY_THRESHOLD - subtotal);
+  const deliveryFee = subtotal === 0 || subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : 25;
   const totalAmount = Math.max(0, subtotal - discountAmount + deliveryFee);
 
-  const handleCouponSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleApplyCode = async (codeToApply: string) => {
     setCouponError('');
     try {
-      await applyCoupon(couponCode);
+      await applyCoupon(codeToApply);
       setCouponCode('');
     } catch (err: any) {
       setCouponError(err.response?.data?.error || 'Failed to apply coupon');
+    }
+  };
+
+  const handleCouponSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (couponCode.trim()) {
+      handleApplyCode(couponCode.trim());
     }
   };
 
@@ -61,15 +69,37 @@ export const CartDrawer: React.FC = () => {
               </div>
             </div>
 
+            {/* Free Delivery Threshold Bar */}
+            {subtotal > 0 && (
+              <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-xl p-3 text-xs space-y-1.5">
+                <div className="flex items-center justify-between font-extrabold text-gray-900">
+                  <span className="flex items-center gap-1">
+                    <Truck className="w-4 h-4 text-blinkit-green" />
+                    {freeDeliveryDiff === 0 ? (
+                      <span className="text-blinkit-green">You unlocked FREE Delivery! 🎉</span>
+                    ) : (
+                      <span>Add ₹{freeDeliveryDiff} more for FREE Delivery</span>
+                    )}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-blinkit-green h-full rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min(100, (subtotal / FREE_DELIVERY_THRESHOLD) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* AI Mission Completion Widget */}
             <MissionCompletionWidget />
 
             {/* Cart Items List */}
             {items.length === 0 ? (
-              <div className="py-12 text-center text-gray-400">
-                <ShoppingBag className="w-16 h-16 mx-auto mb-3 text-gray-200" />
+              <div className="py-12 text-center text-gray-400 space-y-2">
+                <ShoppingBag className="w-16 h-16 mx-auto text-gray-200" />
                 <p className="font-bold text-gray-700">Your cart is empty</p>
-                <p className="text-xs text-gray-500 mt-1">Explore categories to add items</p>
+                <p className="text-xs text-gray-500">Explore categories or click a Quick Mission to start</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
@@ -86,7 +116,7 @@ export const CartDrawer: React.FC = () => {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-xs text-gray-900 truncate">{item.product.name}</h4>
+                      <h4 className="font-bold text-xs text-gray-900 truncate">{item.product.name}</h4>
                       <div className="text-[11px] text-gray-500">{item.product.unit}</div>
                       <div className="font-black text-xs text-gray-900 mt-0.5">₹{item.product.price * item.quantity}</div>
                     </div>
@@ -114,7 +144,7 @@ export const CartDrawer: React.FC = () => {
 
             {/* Coupon Code Section */}
             {items.length > 0 && (
-              <div className="border-t border-gray-100 pt-3">
+              <div className="border-t border-gray-100 pt-3 space-y-2">
                 <form onSubmit={handleCouponSubmit} className="flex gap-2">
                   <div className="relative flex-1">
                     <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -123,7 +153,7 @@ export const CartDrawer: React.FC = () => {
                       placeholder="Enter Coupon (e.g. WELCOME100)"
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      className="w-full text-xs uppercase bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:border-blinkit-green"
+                      className="w-full text-xs uppercase bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-2 font-bold focus:outline-none focus:border-blinkit-green"
                     />
                   </div>
                   <button
@@ -134,13 +164,32 @@ export const CartDrawer: React.FC = () => {
                   </button>
                 </form>
 
+                {/* Predefined Coupon Chips */}
+                {!appliedCoupon && (
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={() => handleApplyCode('WELCOME100')}
+                      className="bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-bold px-2.5 py-1 rounded-lg hover:bg-amber-100 transition"
+                    >
+                      Use WELCOME100 (₹100 Off)
+                    </button>
+                    <button
+                      onClick={() => handleApplyCode('MISSION20')}
+                      className="bg-green-50 border border-green-200 text-green-900 text-[11px] font-bold px-2.5 py-1 rounded-lg hover:bg-green-100 transition"
+                    >
+                      Use MISSION20 (20% Off)
+                    </button>
+                  </div>
+                )}
+
                 {appliedCoupon && (
-                  <div className="text-xs text-blinkit-green font-bold mt-1.5 flex items-center gap-1">
-                    ✓ Coupon "{appliedCoupon}" applied (-₹{discountAmount})
+                  <div className="text-xs text-blinkit-green font-bold flex items-center gap-1 bg-green-50 p-2 rounded-xl border border-green-200">
+                    <CheckCircle2 className="w-4 h-4 text-blinkit-green" />
+                    <span>Coupon "{appliedCoupon}" applied (-₹{discountAmount})</span>
                   </div>
                 )}
                 {couponError && (
-                  <div className="text-xs text-red-600 font-medium mt-1.5">{couponError}</div>
+                  <div className="text-xs text-red-600 font-medium">{couponError}</div>
                 )}
               </div>
             )}
@@ -152,18 +201,18 @@ export const CartDrawer: React.FC = () => {
               <div className="text-xs space-y-1.5 text-gray-600">
                 <div className="flex justify-between">
                   <span>Item Subtotal</span>
-                  <span className="font-semibold text-gray-900">₹{subtotal}</span>
+                  <span className="font-bold text-gray-900">₹{subtotal}</span>
                 </div>
                 {discountAmount > 0 && (
-                  <div className="flex justify-between text-blinkit-green font-semibold">
+                  <div className="flex justify-between text-blinkit-green font-bold">
                     <span>Coupon Discount</span>
                     <span>-₹{discountAmount}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span>Delivery Charge</span>
-                  <span className="font-semibold text-gray-900">
-                    {deliveryFee === 0 ? <span className="text-blinkit-green font-bold">FREE</span> : `₹${deliveryFee}`}
+                  <span className="font-bold text-gray-900">
+                    {deliveryFee === 0 ? <span className="text-blinkit-green font-black">FREE</span> : `₹${deliveryFee}`}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm font-black text-gray-900 border-t border-gray-200 pt-2">

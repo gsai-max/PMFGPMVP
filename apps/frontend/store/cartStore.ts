@@ -48,6 +48,7 @@ interface CartState {
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   applyCoupon: (code: string) => Promise<void>;
   refreshMissionData: () => Promise<void>;
+  clearCart: () => void;
 }
 
 export const useCartStore = create<CartState>((set, get) => ({
@@ -93,8 +94,14 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   updateQuantity: async (itemId: string, quantity: number) => {
     try {
-      await api.patch(`/cart/items/${itemId}`, { quantity });
-      await get().fetchCart();
+      const res = await api.patch(`/cart/items/${itemId}`, { quantity });
+      const cart = res.data;
+      if (cart?.id) {
+        set({ cartId: cart.id, items: cart.items || [] });
+        get().refreshMissionData();
+      } else {
+        await get().fetchCart();
+      }
     } catch (err) {
       console.error('Failed to update quantity:', err);
     }
@@ -108,8 +115,6 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   refreshMissionData: async () => {
     const { cartId } = get();
-    if (!cartId) return;
-
     try {
       const [detectRes, completionRes] = await Promise.all([
         api.get('/mission/detect', { params: { cartId } }),
@@ -123,5 +128,9 @@ export const useCartStore = create<CartState>((set, get) => ({
     } catch (err) {
       console.error('Failed to refresh mission data:', err);
     }
+  },
+
+  clearCart: () => {
+    set({ cartId: null, items: [], discountAmount: 0, appliedCoupon: null, detectedMission: null, missionCompletion: null });
   },
 }));

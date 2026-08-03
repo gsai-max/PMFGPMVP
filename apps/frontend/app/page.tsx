@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Sparkles, ArrowRight, Zap, Coffee, Utensils, ShoppingCart, Film, Users, Baby, Dog } from 'lucide-react';
+import { Sparkles, Zap, Coffee, Utensils, ShoppingCart, Film, Users, Baby, Dog, CheckCircle2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { ProductCard } from '../components/ui/ProductCard';
 import { MissionBanner } from '../components/mission/MissionBanner';
@@ -10,19 +10,21 @@ import { MissionRecommendationRail } from '../components/mission/MissionRecommen
 import { useCartStore } from '../store/cartStore';
 
 const QUICK_MISSIONS = [
-  { key: 'breakfast', name: 'Breakfast Prep', icon: Coffee, bg: 'bg-amber-500' },
-  { key: 'dinner_prep', name: 'Dinner Cooking', icon: Utensils, bg: 'bg-emerald-600' },
-  { key: 'monthly_grocery', name: 'Monthly Restock', icon: ShoppingCart, bg: 'bg-blue-600' },
-  { key: 'movie_night', name: 'Movie Night', icon: Film, bg: 'bg-purple-600' },
-  { key: 'guest_arrival', name: 'Hosting Guests', icon: Users, bg: 'bg-orange-500' },
-  { key: 'baby_care', name: 'Baby Essentials', icon: Baby, bg: 'bg-pink-500' },
-  { key: 'pet_care', name: 'Pet Care', icon: Dog, bg: 'bg-yellow-600' },
+  { key: 'breakfast', name: 'Breakfast Prep', icon: Coffee, bg: 'bg-amber-500', sampleQuery: 'milk' },
+  { key: 'dinner_prep', name: 'Dinner Cooking', icon: Utensils, bg: 'bg-emerald-600', sampleQuery: 'atta' },
+  { key: 'monthly_grocery', name: 'Monthly Restock', icon: ShoppingCart, bg: 'bg-blue-600', sampleQuery: 'rice' },
+  { key: 'movie_night', name: 'Movie Night', icon: Film, bg: 'bg-purple-600', sampleQuery: 'chips' },
+  { key: 'guest_arrival', name: 'Hosting Guests', icon: Users, bg: 'bg-orange-500', sampleQuery: 'coca-cola' },
+  { key: 'baby_care', name: 'Baby Care', icon: Baby, bg: 'bg-pink-500', sampleQuery: 'diapers' },
+  { key: 'pet_care', name: 'Pet Care', icon: Dog, bg: 'bg-yellow-600', sampleQuery: 'pedigree' },
 ];
 
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const { addItem, refreshMissionData } = useCartStore();
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const { addItem, toggleCart } = useCartStore();
 
   useEffect(() => {
     Promise.all([
@@ -30,47 +32,53 @@ export default function HomePage() {
       api.get('/categories'),
     ])
       .then(([prodRes, catRes]) => {
-        setFeaturedProducts(prodRes.data.products);
-        setCategories(catRes.data);
+        setFeaturedProducts(prodRes.data.products || []);
+        setCategories(catRes.data || []);
       })
       .catch(console.error);
   }, []);
 
-  const triggerMissionDemo = (missionKey: string) => {
-    // Add representative seed item for instant mission detection demonstration
-    if (missionKey === 'breakfast') {
-      api.get('/products?q=milk').then((res) => {
-        if (res.data.products?.[0]) addItem(res.data.products[0].id, 1);
-      });
-    } else if (missionKey === 'dinner_prep') {
-      api.get('/products?q=atta').then((res) => {
-        if (res.data.products?.[0]) addItem(res.data.products[0].id, 1);
-      });
-    } else if (missionKey === 'movie_night') {
-      api.get('/products?q=chips').then((res) => {
-        if (res.data.products?.[0]) addItem(res.data.products[0].id, 1);
-      });
+  const triggerMissionDemo = async (missionName: string, query: string) => {
+    try {
+      const res = await api.get(`/products?q=${encodeURIComponent(query)}`);
+      const prod = res.data.products?.[0];
+      if (prod) {
+        await addItem(prod.id, 1);
+        setToastMessage(`Added ${prod.name} for ${missionName}! AI Mission Intent active.`);
+        setTimeout(() => setToastMessage(null), 4000);
+        toggleCart(true);
+      }
+    } catch (e) {
+      console.error(e);
     }
   };
 
   return (
     <div className="space-y-8">
       
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-black text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-gray-800 animate-bounce">
+          <CheckCircle2 className="w-5 h-5 text-blinkit-green shrink-0" />
+          <span className="text-xs font-bold">{toastMessage}</span>
+        </div>
+      )}
+
       {/* Top AI Mission Intelligence Active Banner */}
       <MissionBanner />
 
       {/* Hero Quick Mission Preset Selector */}
       <section className="bg-gradient-to-r from-green-900 via-emerald-800 to-green-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
         <div className="relative z-10 max-w-2xl">
-          <span className="bg-yellow-400 text-black font-black text-xs uppercase px-3 py-1 rounded-full inline-flex items-center gap-1 mb-3">
+          <span className="bg-yellow-400 text-black font-black text-xs uppercase px-3 py-1 rounded-full inline-flex items-center gap-1 mb-3 shadow-md">
             <Zap className="w-3.5 h-3.5 fill-black" />
             10-Minute Instant Mission Delivery
           </span>
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-tight mb-3">
             What's your shopping mission today?
           </h1>
-          <p className="text-green-100 text-sm mb-6">
-            BlinkClone detects your shopping intent in real-time, completing your cart with essential complementary items.
+          <p className="text-green-100 text-sm mb-6 font-medium">
+            Click any mission preset below. BlinkClone detects your intent in real-time and builds a 1-tap completion checklist!
           </p>
 
           {/* Quick Mission Buttons */}
@@ -80,8 +88,8 @@ export default function HomePage() {
               return (
                 <button
                   key={m.key}
-                  onClick={() => triggerMissionDemo(m.key)}
-                  className="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition backdrop-blur-md active:scale-95"
+                  onClick={() => triggerMissionDemo(m.name, m.sampleQuery)}
+                  className="bg-white/10 hover:bg-white/25 border border-white/20 text-white px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition backdrop-blur-md active:scale-95 shadow-sm"
                 >
                   <span className={`w-5 h-5 rounded-md ${m.bg} flex items-center justify-center text-white shrink-0`}>
                     <IconComp className="w-3 h-3" />
@@ -111,9 +119,11 @@ export default function HomePage() {
             <Link
               key={cat.id}
               href={`/category/${cat.slug}`}
-              className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col items-center text-center hover:shadow-md transition group"
+              className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col items-center text-center hover:shadow-lg transition group"
             >
-              <span className="text-3xl mb-2 group-hover:scale-110 transition-transform">🛒</span>
+              <span className="text-4xl mb-2 group-hover:scale-110 transition-transform">
+                {cat.icon || '🛒'}
+              </span>
               <span className="font-extrabold text-xs text-gray-900 group-hover:text-blinkit-green transition-colors">
                 {cat.name}
               </span>
@@ -127,7 +137,7 @@ export default function HomePage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-black text-gray-900">Trending Essentials</h2>
-            <p className="text-xs text-gray-500">Delivered hot & fresh to your doorstep</p>
+            <p className="text-xs text-gray-500 font-medium">Delivered hot & fresh to your doorstep in 10 mins</p>
           </div>
         </div>
 
