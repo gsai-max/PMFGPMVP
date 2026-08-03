@@ -16,11 +16,15 @@ export interface ProductCardProps {
     unit: string;
     imageUrl: string;
     subcategory: string;
+    missionTags?: string[];
   };
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { items, addItem, updateQuantity } = useCartStore();
+  const { items, addItem, updateQuantity, selectedMissionKey, detectedMission } = useCartStore();
+
+  const activeMissionKey = selectedMissionKey || detectedMission?.mission || 'breakfast';
+  const isMissionMatch = product.missionTags?.includes(activeMissionKey);
 
   const cartItem = items.find((i) => i.productId === product.id);
   const quantity = cartItem ? cartItem.quantity : 0;
@@ -30,12 +34,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-3 flex flex-col justify-between hover:shadow-xl transition-all group relative">
       
-      {/* Discount Badge */}
-      {discountPercent > 0 && (
-        <span className="absolute top-3 left-3 bg-blue-600 text-white font-black text-[10px] uppercase px-2 py-0.5 rounded-br-lg rounded-tl-lg z-10 shadow">
-          {discountPercent}% OFF
-        </span>
-      )}
+      {/* Discount & Mission Badges */}
+      <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
+        {discountPercent > 0 && (
+          <span className="bg-blue-600 text-white font-black text-[10px] uppercase px-2 py-0.5 rounded-br-lg rounded-tl-lg shadow">
+            {discountPercent}% OFF
+          </span>
+        )}
+        {isMissionMatch && (
+          <span className="bg-emerald-600 text-yellow-300 font-black text-[9px] uppercase px-1.5 py-0.5 rounded-md shadow flex items-center gap-0.5 w-fit">
+            ✨ AI Match
+          </span>
+        )}
+      </div>
 
       {/* 10 Min Delivery Pill */}
       <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md border border-gray-200/60 text-[10px] font-bold text-gray-700 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 z-10">

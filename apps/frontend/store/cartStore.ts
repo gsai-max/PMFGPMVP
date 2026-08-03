@@ -40,6 +40,8 @@ interface CartState {
   appliedCoupon: string | null;
   detectedMission: DetectedMission | null;
   missionCompletion: MissionCompletion | null;
+  selectedMissionKey: string | null;
+  activeSubcategoryFilter: string | null;
   
   // Actions
   toggleCart: (open?: boolean) => void;
@@ -49,6 +51,8 @@ interface CartState {
   applyCoupon: (code: string) => Promise<void>;
   refreshMissionData: () => Promise<void>;
   clearCart: () => void;
+  setSelectedMission: (missionKey: string | null) => void;
+  setSubcategoryFilter: (subcategory: string | null) => void;
 }
 
 export const useCartStore = create<CartState>((set, get) => ({
@@ -59,8 +63,14 @@ export const useCartStore = create<CartState>((set, get) => ({
   appliedCoupon: null,
   detectedMission: null,
   missionCompletion: null,
+  selectedMissionKey: null,
+  activeSubcategoryFilter: null,
 
   toggleCart: (open) => set((state) => ({ isCartOpen: open !== undefined ? open : !state.isCartOpen })),
+  setSelectedMission: (missionKey) => set({ selectedMissionKey: missionKey, activeSubcategoryFilter: null }),
+  setSubcategoryFilter: (subcategory) => set((state) => ({ 
+    activeSubcategoryFilter: state.activeSubcategoryFilter === subcategory ? null : subcategory 
+  })),
 
   fetchCart: async () => {
     try {

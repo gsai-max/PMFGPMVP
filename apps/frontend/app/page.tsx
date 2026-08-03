@@ -2,11 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Sparkles, Zap, Coffee, Utensils, ShoppingCart, Film, Users, Baby, Dog, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Zap, Coffee, Utensils, ShoppingCart, Film, Users, Baby, Dog, CheckCircle2, Bot, Layers, Target, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '../lib/api';
 import { MOCK_CATEGORIES, MOCK_PRODUCTS } from '../lib/mockData';
 import { ProductCard } from '../components/ui/ProductCard';
 import { MissionBanner } from '../components/mission/MissionBanner';
+import { MissionCategoryRail } from '../components/mission/MissionCategoryRail';
 import { MissionRecommendationRail } from '../components/mission/MissionRecommendationRail';
 import { useCartStore } from '../store/cartStore';
 
@@ -21,12 +22,14 @@ const QUICK_MISSIONS = [
 ];
 
 export default function HomePage() {
-  // Initialize state with rich mock data so SSR/hydration renders full catalog immediately
   const [featuredProducts, setFeaturedProducts] = useState<any[]>(MOCK_PRODUCTS.slice(0, 12));
   const [categories, setCategories] = useState<any[]>(MOCK_CATEGORIES);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [showAIGuide, setShowAIGuide] = useState<boolean>(true);
 
-  const { addItem, toggleCart } = useCartStore();
+  const { addItem, toggleCart, selectedMissionKey, setSelectedMission, detectedMission } = useCartStore();
+
+  const activeMissionKey = selectedMissionKey || detectedMission?.mission || 'breakfast';
 
   useEffect(() => {
     Promise.all([
@@ -44,15 +47,15 @@ export default function HomePage() {
       .catch(console.error);
   }, []);
 
-  const triggerMissionDemo = async (missionName: string, query: string) => {
+  const triggerMissionDemo = async (missionKey: string, missionName: string, query: string) => {
     try {
+      setSelectedMission(missionKey);
       const res = await api.get(`/products?q=${encodeURIComponent(query)}`);
       const prod = res.data.products?.[0] || MOCK_PRODUCTS[0];
       if (prod) {
         await addItem(prod.id, 1);
-        setToastMessage(`Added ${prod.name} for ${missionName}! AI Mission Intent active.`);
+        setToastMessage(`Selected ${missionName}! AI Mission intent active.`);
         setTimeout(() => setToastMessage(null), 4000);
-        toggleCart(true);
       }
     } catch (e) {
       console.error(e);
@@ -60,7 +63,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       
       {/* Toast Notification */}
       {toastMessage && (
@@ -69,6 +72,64 @@ export default function HomePage() {
           <span className="text-xs font-bold">{toastMessage}</span>
         </div>
       )}
+
+      {/* AI Feature Callout Guide Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-5 shadow-lg border border-indigo-500/30">
+        <div className="flex items-center justify-between cursor-pointer" onClick={() => setShowAIGuide(!showAIGuide)}>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shadow-inner">
+              <Bot className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="bg-yellow-400 text-black font-extrabold text-[10px] uppercase px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 fill-black text-black" />
+                  NEW FEATURE
+                </span>
+                <span className="text-xs font-bold text-indigo-200">AI Mission Intelligence Platform</span>
+              </div>
+              <h3 className="text-sm font-black text-white">How AI Mission Shopping Works</h3>
+            </div>
+          </div>
+          <button className="text-indigo-300 hover:text-white p-1">
+            {showAIGuide ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </button>
+        </div>
+
+        {showAIGuide && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-indigo-800/40">
+            <div className="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-start gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+                <Zap className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-extrabold text-white">1. Mission Intent Detection</div>
+                <div className="text-[11px] text-gray-300 mt-0.5">Infers your meal or goal (e.g. Breakfast) from cart signals, search, & time of day.</div>
+              </div>
+            </div>
+
+            <div className="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-start gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+                <Layers className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-extrabold text-white">2. Mission Subcategory Clustering</div>
+                <div className="text-[11px] text-gray-300 mt-0.5">Aggregates Dosa Batter, Milk, Eggs, Oats, & Juices in 1 tap without cross-category navigation.</div>
+              </div>
+            </div>
+
+            <div className="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-start gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-300 flex items-center justify-center shrink-0 mt-0.5">
+                <Target className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-extrabold text-white">3. Mission Checklist Assistant</div>
+                <div className="text-[11px] text-gray-300 mt-0.5">Displays live completion % and 1-tap add suggestions inside your cart.</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Top AI Mission Intelligence Active Banner */}
       <MissionBanner />
@@ -84,23 +145,29 @@ export default function HomePage() {
             What's your shopping mission today?
           </h1>
           <p className="text-green-100 text-sm mb-6 font-medium">
-            Click any mission preset below. BlinkClone detects your intent in real-time and builds a 1-tap completion checklist!
+            Click any mission preset below to activate 1-tap mission discovery & completion checklist!
           </p>
 
           {/* Quick Mission Buttons */}
           <div className="flex flex-wrap gap-2.5">
             {QUICK_MISSIONS.map((m) => {
               const IconComp = m.icon;
+              const isActive = activeMissionKey === m.key;
               return (
                 <button
                   key={m.key}
-                  onClick={() => triggerMissionDemo(m.name, m.sampleQuery)}
-                  className="bg-white/10 hover:bg-white/25 border border-white/20 text-white px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition backdrop-blur-md active:scale-95 shadow-sm"
+                  onClick={() => triggerMissionDemo(m.key, m.name, m.sampleQuery)}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all backdrop-blur-md active:scale-95 shadow-sm border ${
+                    isActive
+                      ? 'bg-yellow-400 text-black border-yellow-300 shadow-xl ring-2 ring-yellow-300/60 scale-105'
+                      : 'bg-white/10 hover:bg-white/25 border-white/20 text-white'
+                  }`}
                 >
                   <span className={`w-5 h-5 rounded-md ${m.bg} flex items-center justify-center text-white shrink-0`}>
                     <IconComp className="w-3 h-3" />
                   </span>
                   {m.name}
+                  {isActive && <span className="bg-black text-yellow-300 text-[9px] px-1.5 py-0.5 rounded-full font-bold">ACTIVE</span>}
                 </button>
               );
             })}
@@ -111,6 +178,9 @@ export default function HomePage() {
           <Sparkles className="w-96 h-96 text-white" />
         </div>
       </section>
+
+      {/* Mission-Aligned Subcategory Rail (Dosa Batter, Milk, Eggs, Oats, Protein, Juices) */}
+      <MissionCategoryRail />
 
       {/* Mission Recommendation Rail */}
       <MissionRecommendationRail />
