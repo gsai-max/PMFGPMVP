@@ -3,18 +3,23 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { api } from '../../lib/api';
+import { MOCK_PRODUCTS } from '../../lib/mockData';
 import { useCartStore } from '../../store/cartStore';
 import { ProductCard } from '../ui/ProductCard';
 
 export const MissionRecommendationRail: React.FC = () => {
   const { detectedMission, cartId } = useCartStore();
-  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [recommendations, setRecommendations] = useState<any[]>(MOCK_PRODUCTS.slice(0, 6));
 
   useEffect(() => {
     const missionKey = detectedMission?.mission || undefined;
     api
       .get('/mission/recommendations', { params: { mission: missionKey, cartId } })
-      .then((res) => setRecommendations(res.data))
+      .then((res) => {
+        if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+          setRecommendations(res.data);
+        }
+      })
       .catch(console.error);
   }, [detectedMission, cartId]);
 

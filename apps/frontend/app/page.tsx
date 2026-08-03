@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Sparkles, Zap, Coffee, Utensils, ShoppingCart, Film, Users, Baby, Dog, CheckCircle2 } from 'lucide-react';
 import { api } from '../lib/api';
+import { MOCK_CATEGORIES, MOCK_PRODUCTS } from '../lib/mockData';
 import { ProductCard } from '../components/ui/ProductCard';
 import { MissionBanner } from '../components/mission/MissionBanner';
 import { MissionRecommendationRail } from '../components/mission/MissionRecommendationRail';
@@ -20,8 +21,9 @@ const QUICK_MISSIONS = [
 ];
 
 export default function HomePage() {
-  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  // Initialize state with rich mock data so SSR/hydration renders full catalog immediately
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>(MOCK_PRODUCTS.slice(0, 12));
+  const [categories, setCategories] = useState<any[]>(MOCK_CATEGORIES);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const { addItem, toggleCart } = useCartStore();
@@ -32,8 +34,12 @@ export default function HomePage() {
       api.get('/categories'),
     ])
       .then(([prodRes, catRes]) => {
-        setFeaturedProducts(prodRes.data.products || []);
-        setCategories(catRes.data || []);
+        if (prodRes.data?.products && prodRes.data.products.length > 0) {
+          setFeaturedProducts(prodRes.data.products);
+        }
+        if (catRes.data && Array.isArray(catRes.data) && catRes.data.length > 0) {
+          setCategories(catRes.data);
+        }
       })
       .catch(console.error);
   }, []);
@@ -41,7 +47,7 @@ export default function HomePage() {
   const triggerMissionDemo = async (missionName: string, query: string) => {
     try {
       const res = await api.get(`/products?q=${encodeURIComponent(query)}`);
-      const prod = res.data.products?.[0];
+      const prod = res.data.products?.[0] || MOCK_PRODUCTS[0];
       if (prod) {
         await addItem(prod.id, 1);
         setToastMessage(`Added ${prod.name} for ${missionName}! AI Mission Intent active.`);

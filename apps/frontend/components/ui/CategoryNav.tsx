@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { api } from '../../lib/api';
+import { MOCK_CATEGORIES } from '../../lib/mockData';
 
 export interface Category {
   id: string;
@@ -13,17 +14,17 @@ export interface Category {
 }
 
 export const CategoryNav: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
 
   useEffect(() => {
     api.get('/categories')
       .then((res) => {
-        setCategories(res.data || []);
+        if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+          setCategories(res.data);
+        }
       })
       .catch(console.error);
   }, []);
-
-  if (categories.length === 0) return null;
 
   return (
     <nav className="bg-white border-b border-gray-100 shadow-sm overflow-x-auto scrollbar-none py-2.5">
