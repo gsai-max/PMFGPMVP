@@ -28,7 +28,7 @@ export default function HomePage() {
   const [categories, setCategories] = useState<any[]>(MOCK_CATEGORIES);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const { addItem, toggleCart, selectedMissionKey, setSelectedMission, detectedMission } = useCartStore();
+  const { selectedMissionKey, setSelectedMission, detectedMission } = useCartStore();
 
   const activeMissionKey = selectedMissionKey || detectedMission?.mission || 'breakfast';
 
@@ -48,19 +48,10 @@ export default function HomePage() {
       .catch(console.error);
   }, []);
 
-  const triggerMissionDemo = async (missionKey: string, missionName: string, query: string) => {
-    try {
-      setSelectedMission(missionKey);
-      const res = await api.get(`/products?q=${encodeURIComponent(query)}`);
-      const prod = res.data.products?.[0] || MOCK_PRODUCTS[0];
-      if (prod) {
-        await addItem(prod.id, 1);
-        setToastMessage(`Selected ${missionName}! AI Mission intent active.`);
-        setTimeout(() => setToastMessage(null), 4000);
-      }
-    } catch (e) {
-      console.error(e);
-    }
+  const selectMission = (missionKey: string, missionName: string) => {
+    setSelectedMission(missionKey);
+    setToastMessage(`Selected ${missionName}! AI Mission intent active.`);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   return (
@@ -102,7 +93,7 @@ export default function HomePage() {
               return (
                 <button
                   key={m.key}
-                  onClick={() => triggerMissionDemo(m.key, m.name, m.sampleQuery)}
+                  onClick={() => selectMission(m.key, m.name)}
                   className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all backdrop-blur-md active:scale-95 shadow-sm border ${
                     isActive
                       ? 'bg-yellow-400 text-black border-yellow-300 shadow-xl ring-2 ring-yellow-300/60 scale-105'
