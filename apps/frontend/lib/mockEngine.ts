@@ -1,5 +1,6 @@
 import { MOCK_CATEGORIES, MOCK_PRODUCTS, MOCK_COUPONS, MockProduct } from './mockData';
 import {
+  findClusterByFilter,
   getMissingClusters,
   isClusterFilled,
   MISSION_CLUSTER_MAP,
@@ -279,10 +280,43 @@ export class MockEngine {
     };
   }
 
-  static getMissionRecommendations(missionKey?: string, cartId?: string | null) {
+  static getMissionRecommendations(missionKey?: string, cartId?: string | null, query?: string | null) {
     const cart = this.getCart(cartId);
     const cartItemIds = new Set(cart.items.map((i) => i.productId));
     const cartSubcats = new Set(cart.items.map((i) => i.product.subcategory));
+
+    if (query && missionKey) {
+      const matchedCluster = findClusterByFilter(missionKey, query);
+      if (matchedCluster) {
+        const clusterSubs = matchedCluster.catalogSubcategories.map((s) => s.toLowerCase());
+        const examples = matchedCluster.productExamples.map((e) => e.toLowerCase());
+
+        const matched = MOCK_PRODUCTS.filter((p) => {
+          if (cartItemIds.has(p.id)) return false;
+          const pSub = (p.subcategory || '').toLowerCase();
+          const pName = (p.name || '').toLowerCase();
+          const pDesc = (p.description || '').toLowerCase();
+
+          if (clusterSubs.some((sub) => pSub.includes(sub) || sub.includes(pSub))) return true;
+          if (examples.some((ex) => ex.length > 2 && (pName.includes(ex) || pDesc.includes(ex)))) return true;
+
+          return false;
+        });
+
+        if (matched.length > 0) return matched;
+      }
+
+      const q = query.toLowerCase().trim();
+      const directMatch = MOCK_PRODUCTS.filter((p) => {
+        if (cartItemIds.has(p.id)) return false;
+        return (
+          p.name.toLowerCase().includes(q) ||
+          p.subcategory.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q)
+        );
+      });
+      if (directMatch.length > 0) return directMatch;
+    }
 
     if (missionKey && MISSION_CLUSTER_MAP[missionKey]) {
       const missingClusters = getMissingClusters(cartSubcats, missionKey, true);
@@ -290,7 +324,7 @@ export class MockEngine {
       const clusterMatches = MOCK_PRODUCTS.filter(
         (p) => targetSubs.includes(p.subcategory) && !cartItemIds.has(p.id)
       );
-      if (clusterMatches.length > 0) return clusterMatches.slice(0, 6);
+      if (clusterMatches.length > 0) return clusterMatches.slice(0, 8);
     }
 
     let candidates = MOCK_PRODUCTS.filter((p) => !cartItemIds.has(p.id));
@@ -298,7 +332,7 @@ export class MockEngine {
       candidates = candidates.filter((p) => p.missionTags.includes(missionKey));
     }
 
-    return candidates.slice(0, 6);
+    return candidates.slice(0, 8);
   }
 
   // Orders

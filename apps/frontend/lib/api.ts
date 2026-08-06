@@ -129,7 +129,7 @@ function handleMockRoute(method: string, url: string, payload?: any, params?: an
   }
 
   if (cleanUrl === '/mission/recommendations' && method === 'GET') {
-    return MockEngine.getMissionRecommendations(mission, cartId);
+    return MockEngine.getMissionRecommendations(mission, cartId, q);
   }
 
   if (cleanUrl === '/mission/clusters' && method === 'GET') {
