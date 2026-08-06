@@ -123,7 +123,23 @@ export default function HomePage() {
       {/* Mission Recommendation Rail */}
       <MissionRecommendationRail />
 
-      {/* Category Grid */}
+      {/* Top Products Carousel / Grid */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-black text-gray-900">Trending Essentials</h2>
+            <p className="text-xs text-gray-500 font-medium">Delivered hot & fresh to your doorstep in 10 mins</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {featuredProducts.map((prod) => (
+            <ProductCard key={prod.id} product={prod} />
+          ))}
+        </div>
+      </section>
+
+      {/* Category Grid (Moved to bottom of page) */}
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-black text-gray-900">Browse Categories</h2>
@@ -142,22 +158,6 @@ export default function HomePage() {
                 {cat.name}
               </span>
             </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Top Products Carousel / Grid */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-black text-gray-900">Trending Essentials</h2>
-            <p className="text-xs text-gray-500 font-medium">Delivered hot & fresh to your doorstep in 10 mins</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {featuredProducts.map((prod) => (
-            <ProductCard key={prod.id} product={prod} />
           ))}
         </div>
       </section>
