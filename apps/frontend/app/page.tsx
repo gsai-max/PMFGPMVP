@@ -73,17 +73,19 @@ export default function HomePage() {
 
       {/* Hero Quick Mission Preset Selector */}
       <section className="bg-gradient-to-r from-green-900 via-emerald-800 to-green-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-        <div className="relative z-10 max-w-2xl">
-          <span className="bg-yellow-400 text-black font-black text-xs uppercase px-3 py-1 rounded-full inline-flex items-center gap-1 mb-3 shadow-md">
-            <Zap className="w-3.5 h-3.5 fill-black" />
-            10-Minute Instant Mission Delivery
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-tight mb-3">
-            What's your shopping mission today?
-          </h1>
-          <p className="text-green-100 text-sm mb-6 font-medium">
-            Click any mission preset below to activate 1-tap mission discovery & completion checklist!
-          </p>
+        <div className="relative z-10 max-w-5xl">
+          <div className="max-w-2xl mb-6">
+            <span className="bg-yellow-400 text-black font-black text-xs uppercase px-3 py-1 rounded-full inline-flex items-center gap-1 mb-3 shadow-md">
+              <Zap className="w-3.5 h-3.5 fill-black" />
+              10-Minute Instant Mission Delivery
+            </span>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-tight mb-3">
+              What's your shopping mission today?
+            </h1>
+            <p className="text-green-100 text-sm font-medium">
+              Click any mission preset below to activate 1-tap mission discovery & completion checklist!
+            </p>
+          </div>
 
           {/* Quick Mission Buttons */}
           <div className="flex flex-wrap gap-2.5">
@@ -94,7 +96,7 @@ export default function HomePage() {
                 <button
                   key={m.key}
                   onClick={() => selectMission(m.key, m.name)}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all backdrop-blur-md active:scale-95 shadow-sm border ${
+                  className={`px-3.5 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition-all backdrop-blur-md active:scale-95 shadow-sm border ${
                     isActive
                       ? 'bg-yellow-400 text-black border-yellow-300 shadow-xl ring-2 ring-yellow-300/60 scale-105'
                       : 'bg-white/10 hover:bg-white/25 border-white/20 text-white'
