@@ -75,6 +75,9 @@ export const MissionRecommendationRail: React.FC = () => {
     ? selectedMissionKey.replace('_', ' ').toUpperCase()
     : (detectedMission?.displayName || 'Breakfast Prep');
 
+  const clusterObj = activeSubcategoryFilter ? findClusterByFilter(activeMissionKey, activeSubcategoryFilter) : null;
+  const filterLabel = clusterObj ? clusterObj.name : activeSubcategoryFilter;
+
   return (
     <section className="my-8">
       <div className="flex items-center justify-between mb-4">
@@ -85,7 +88,7 @@ export const MissionRecommendationRail: React.FC = () => {
           </span>
           <h2 className="text-xl font-black text-gray-900">
             {activeSubcategoryFilter 
-              ? `Items for "${activeSubcategoryFilter}" in ${missionName}` 
+              ? `Items for "${filterLabel}" in ${missionName}` 
               : `AI Recommended for your ${missionName}`}
           </h2>
         </div>

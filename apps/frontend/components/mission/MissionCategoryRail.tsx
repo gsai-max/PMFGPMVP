@@ -31,11 +31,14 @@ export const MissionCategoryRail: React.FC = () => {
 
       <div className="flex flex-wrap gap-2.5">
         {config.clusters.map((sub) => {
-          const isActive = activeSubcategoryFilter === sub.searchQuery || activeSubcategoryFilter === sub.name;
+          const isActive =
+            activeSubcategoryFilter === sub.id ||
+            activeSubcategoryFilter === sub.searchQuery ||
+            activeSubcategoryFilter === sub.name;
           return (
             <button
               key={sub.id}
-              onClick={() => setSubcategoryFilter(sub.searchQuery || sub.name)}
+              onClick={() => setSubcategoryFilter(sub.id)}
               className={`px-3.5 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all transform active:scale-95 border ${
                 isActive
                   ? 'bg-yellow-400 text-black border-yellow-300 shadow-lg scale-105 ring-2 ring-yellow-400/50'
