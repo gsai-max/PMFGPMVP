@@ -9,6 +9,7 @@ import { ProductCard } from '../components/ui/ProductCard';
 import { MissionBanner } from '../components/mission/MissionBanner';
 import { MissionCategoryRail } from '../components/mission/MissionCategoryRail';
 import { MissionRecommendationRail } from '../components/mission/MissionRecommendationRail';
+import { AIMissionGuideBanner } from '../components/mission/AIMissionGuideBanner';
 import { useCartStore } from '../store/cartStore';
 
 const QUICK_MISSIONS = [
@@ -26,7 +27,6 @@ export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<any[]>(MOCK_PRODUCTS.slice(0, 12));
   const [categories, setCategories] = useState<any[]>(MOCK_CATEGORIES);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [showAIGuide, setShowAIGuide] = useState<boolean>(true);
 
   const { addItem, toggleCart, selectedMissionKey, setSelectedMission, detectedMission } = useCartStore();
 
@@ -75,62 +75,7 @@ export default function HomePage() {
       )}
 
       {/* AI Feature Callout Guide Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-5 shadow-lg border border-indigo-500/30">
-        <div className="flex items-center justify-between cursor-pointer" onClick={() => setShowAIGuide(!showAIGuide)}>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shadow-inner">
-              <Bot className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="bg-yellow-400 text-black font-extrabold text-[10px] uppercase px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 fill-black text-black" />
-                  NEW FEATURE
-                </span>
-                <span className="text-xs font-bold text-indigo-200">AI Mission Intelligence Platform</span>
-              </div>
-              <h3 className="text-sm font-black text-white">How AI Mission Shopping Works</h3>
-            </div>
-          </div>
-          <button className="text-indigo-300 hover:text-white p-1">
-            {showAIGuide ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </button>
-        </div>
-
-        {showAIGuide && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-indigo-800/40">
-            <div className="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-start gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
-                <Zap className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-extrabold text-white">1. Mission Intent Detection</div>
-                <div className="text-[11px] text-gray-300 mt-0.5">Infers your meal or goal (e.g. Breakfast) from cart signals, search, & time of day.</div>
-              </div>
-            </div>
-
-            <div className="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-start gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
-                <Layers className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-extrabold text-white">2. Mission Subcategory Clustering</div>
-                <div className="text-[11px] text-gray-300 mt-0.5">Aggregates Dosa Batter, Milk, Eggs, Oats, & Juices in 1 tap without cross-category navigation.</div>
-              </div>
-            </div>
-
-            <div className="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-start gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-300 flex items-center justify-center shrink-0 mt-0.5">
-                <Target className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-extrabold text-white">3. Mission Checklist Assistant</div>
-                <div className="text-[11px] text-gray-300 mt-0.5">Displays live completion % and 1-tap add suggestions inside your cart.</div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      <AIMissionGuideBanner />
 
       {/* Top AI Mission Intelligence Active Banner */}
       <MissionBanner />

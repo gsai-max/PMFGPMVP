@@ -1,4 +1,9 @@
-import { MOCK_CATEGORIES, MOCK_PRODUCTS, MOCK_MISSIONS, MOCK_COUPONS, MockProduct } from './mockData';
+import { MOCK_CATEGORIES, MOCK_PRODUCTS, MOCK_COUPONS, MockProduct } from './mockData';
+import {
+  getMissingClusters,
+  isClusterFilled,
+  MISSION_CLUSTER_MAP,
+} from './missionClusters';
 
 interface CartItem {
   id: string;
@@ -188,48 +193,35 @@ export class MockEngine {
       };
     }
 
-    // Extract subcategories in cart
     const cartSubcats = new Set(cart.items.map((i) => i.product.subcategory));
     const cartTags = new Set(cart.items.flatMap((i) => i.product.missionTags));
 
-    let bestMission: any = null;
+    let bestMissionKey: string | null = null;
     let highestScore = 0;
     let matchedSignals: string[] = [];
 
-    for (const m of MOCK_MISSIONS) {
-      let matchedReq = 0;
-      let matchedOpt = 0;
+    for (const [key, def] of Object.entries(MISSION_CLUSTER_MAP)) {
+      const coreClusters = def.clusters.filter((c) => !c.isAdjacent);
+      const filled = coreClusters.filter((c) => isClusterFilled(cartSubcats, c)).length;
+      const tagMatch = cartTags.has(key);
 
-      m.requiredSubcategories.forEach((sub) => {
-        if (cartSubcats.has(sub)) matchedReq++;
-      });
-
-      m.optionalSubcategories.forEach((sub) => {
-        if (cartSubcats.has(sub)) matchedOpt++;
-      });
-
-      if (cartTags.has(m.key)) matchedOpt++;
-
-      // Score calculation
-      const totalReq = m.requiredSubcategories.length;
       let score = 0;
-
-      if (matchedReq > 0) {
-        score = (matchedReq / totalReq) * 0.7 + (matchedOpt > 0 ? 0.25 : 0);
-      } else if (cartTags.has(m.key)) {
+      if (coreClusters.length > 0 && filled > 0) {
+        score = (filled / coreClusters.length) * 0.7 + (tagMatch ? 0.25 : 0);
+      } else if (tagMatch) {
         score = 0.5;
       }
 
       if (score > highestScore && score >= 0.4) {
         highestScore = score;
-        bestMission = m;
-        matchedSignals = Array.from(cartSubcats).filter(
-          (sub) => m.requiredSubcategories.includes(sub) || m.optionalSubcategories.includes(sub)
-        );
+        bestMissionKey = key;
+        matchedSignals = def.clusters
+          .filter((c) => isClusterFilled(cartSubcats, c))
+          .map((c) => c.name);
       }
     }
 
-    if (!bestMission) {
+    if (!bestMissionKey) {
       return {
         mission: null,
         displayName: 'General Grocery',
@@ -239,12 +231,13 @@ export class MockEngine {
       };
     }
 
+    const bestMission = MISSION_CLUSTER_MAP[bestMissionKey];
     return {
-      mission: bestMission.key,
+      mission: bestMissionKey,
       displayName: bestMission.displayName,
       confidence: Math.min(0.98, Number(highestScore.toFixed(2))),
       icon: bestMission.icon,
-      matchedSignals: matchedSignals.map((s) => `Matched category: ${s}`),
+      matchedSignals: matchedSignals.map((s) => `Matched cluster: ${s}`),
     };
   }
 
@@ -254,34 +247,34 @@ export class MockEngine {
       return { completionPercentage: 0, missingSlots: [], suggestedItems: [], mission: null };
     }
 
-    const missionDef = MOCK_MISSIONS.find((m) => m.key === detection.mission);
-    if (!missionDef) return { completionPercentage: 0, missingSlots: [], suggestedItems: [], mission: null };
+    const clusterDef = MISSION_CLUSTER_MAP[detection.mission];
+    if (!clusterDef) return { completionPercentage: 0, missingSlots: [], suggestedItems: [], mission: null };
 
     const cart = this.getCart(cartId);
     const cartSubcats = new Set(cart.items.map((i) => i.product.subcategory));
 
-    const missingReq = missionDef.requiredSubcategories.filter((sub) => !cartSubcats.has(sub));
-    const missingOpt = missionDef.optionalSubcategories.filter((sub) => !cartSubcats.has(sub));
+    const coreClusters = clusterDef.clusters.filter((c) => !c.isAdjacent);
+    const filledCount = coreClusters.filter((c) => isClusterFilled(cartSubcats, c)).length;
+    const missingClusters = getMissingClusters(cartSubcats, detection.mission, false);
 
-    const totalSubcats = missionDef.requiredSubcategories.length + Math.min(2, missionDef.optionalSubcategories.length);
-    const fulfilledCount = totalSubcats - (missingReq.length + Math.min(1, missingOpt.length));
+    const completionPercentage =
+      coreClusters.length === 0 ? 100 : Math.min(100, Math.round((filledCount / coreClusters.length) * 100));
 
-    const completionPercentage = Math.min(100, Math.max(25, Math.round((fulfilledCount / totalSubcats) * 100)));
-
-    // Find suggested 1-tap add items matching missing subcategories
-    const missingTargets = [...missingReq, ...missingOpt];
+    const missingSubcategories = Array.from(new Set(missingClusters.flatMap((c) => c.catalogSubcategories)));
     const suggestedItems = MOCK_PRODUCTS.filter(
-      (p) => missingTargets.includes(p.subcategory) && !cart.items.some((i) => i.productId === p.id)
+      (p) =>
+        missingSubcategories.includes(p.subcategory) &&
+        !cart.items.some((i) => i.productId === p.id)
     ).slice(0, 3);
 
     return {
       completionPercentage,
-      missingSlots: missingTargets,
+      missingSlots: missingClusters.map((c) => c.name),
       suggestedItems,
       mission: {
-        key: missionDef.key,
-        displayName: missionDef.displayName,
-        icon: missionDef.icon,
+        key: clusterDef.key,
+        displayName: clusterDef.displayName,
+        icon: clusterDef.icon,
       },
     };
   }
@@ -289,9 +282,18 @@ export class MockEngine {
   static getMissionRecommendations(missionKey?: string, cartId?: string | null) {
     const cart = this.getCart(cartId);
     const cartItemIds = new Set(cart.items.map((i) => i.productId));
+    const cartSubcats = new Set(cart.items.map((i) => i.product.subcategory));
+
+    if (missionKey && MISSION_CLUSTER_MAP[missionKey]) {
+      const missingClusters = getMissingClusters(cartSubcats, missionKey, true);
+      const targetSubs = Array.from(new Set(missingClusters.flatMap((c) => c.catalogSubcategories)));
+      const clusterMatches = MOCK_PRODUCTS.filter(
+        (p) => targetSubs.includes(p.subcategory) && !cartItemIds.has(p.id)
+      );
+      if (clusterMatches.length > 0) return clusterMatches.slice(0, 6);
+    }
 
     let candidates = MOCK_PRODUCTS.filter((p) => !cartItemIds.has(p.id));
-
     if (missionKey) {
       candidates = candidates.filter((p) => p.missionTags.includes(missionKey));
     }

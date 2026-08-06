@@ -18,20 +18,20 @@ describe('Phase 2: AI Mission Intelligence Engine Unit Test Suite', () => {
     expect(result.displayName).toBe('General Browsing');
   });
 
-  test('detectMission correctly predicts Breakfast mission for morning time prior & breakfast cart items', async () => {
-    // Find or mock a breakfast product
-    const breakfastProduct = await prisma.product.findFirst({
-      where: { subcategory: 'Milk & Curd' },
-    });
+  test('detectMission correctly predicts Breakfast mission for breakfast cart items', async () => {
+    const milkProduct = await prisma.product.findFirst({ where: { subcategory: 'Milk & Curd' } });
+    const eggProduct = await prisma.product.findFirst({ where: { subcategory: 'Eggs & Paneer' } });
+    const breadProduct = await prisma.product.findFirst({ where: { subcategory: 'Bread & Buns' } });
 
-    if (breakfastProduct) {
-      // Create a test cart
+    if (milkProduct && eggProduct && breadProduct) {
       const testCart = await prisma.cart.create({
         data: {
           status: 'ACTIVE',
           items: {
             create: [
-              { productId: breakfastProduct.id, quantity: 2 },
+              { productId: milkProduct.id, quantity: 1 },
+              { productId: eggProduct.id, quantity: 1 },
+              { productId: breadProduct.id, quantity: 1 },
             ],
           },
         },
@@ -42,7 +42,6 @@ describe('Phase 2: AI Mission Intelligence Engine Unit Test Suite', () => {
       expect(result.mission).toBe('breakfast');
       expect(result.displayName).toContain('Breakfast');
 
-      // Cleanup
       await prisma.cart.delete({ where: { id: testCart.id } });
     }
   });

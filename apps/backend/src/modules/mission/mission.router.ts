@@ -1,8 +1,24 @@
 import { Router, Request, Response } from 'express';
-import { detectMission, getMissionRecommendations, getMissionCompletion } from './mission.service';
+import {
+  detectMission,
+  getMissionClusterConfig,
+  getMissionRecommendations,
+  getMissionCompletion,
+} from './mission.service';
 import { prisma } from '../../db';
 
 const router = Router();
+
+// GET /api/mission/clusters
+router.get('/mission/clusters', async (req: Request, res: Response) => {
+  try {
+    const { mission } = req.query;
+    const clusters = getMissionClusterConfig(mission as string | undefined);
+    res.json(clusters);
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to fetch mission clusters' });
+  }
+});
 
 // GET /api/mission/detect
 router.get('/mission/detect', async (req: Request, res: Response) => {

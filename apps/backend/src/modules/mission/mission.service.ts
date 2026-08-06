@@ -1,4 +1,10 @@
 import { prisma, sessionCache } from '../../db';
+import {
+  getMissingClusters,
+  getMissionClusters,
+  isClusterFilled,
+  MISSION_CLUSTER_MAP,
+} from './missionClusters';
 
 export interface DetectionResult {
   mission: string | null;
@@ -39,7 +45,7 @@ async function classifyMissionWithGroq(
 
   try {
     const prompt = `Cart items: ${cartItemsSummary.join(', ') || 'None'}. Recent Searches: ${searchQueries.join(', ') || 'None'}. Time of Day: ${timeOfDay}.
-Classify the user's shopping mission. Available missions: breakfast, dinner_prep, monthly_grocery, movie_night, guest_arrival, baby_care, pet_care, house_cleaning, office_snacks, emergency_purchase, fitness_nutrition, late_night_cravings.`;
+Classify the user's shopping mission. Available missions: breakfast, meal_prep, dinner_prep, monthly_grocery, movie_night, guest_arrival, baby_care, pet_care, house_cleaning, office_snacks, emergency_purchase, fitness_nutrition, late_night_cravings.`;
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -171,9 +177,9 @@ export async function detectMission(cartId?: string, sessionId?: string): Promis
     if (m.key === 'breakfast' && currentHour >= 4 && currentHour <= 11) {
       score += 0.20;
       signals.push('Morning shopping time prior (+20%)');
-    } else if (m.key === 'dinner_prep' && currentHour >= 16 && currentHour <= 21) {
+    } else if ((m.key === 'meal_prep' || m.key === 'dinner_prep') && currentHour >= 14 && currentHour <= 21) {
       score += 0.20;
-      signals.push('Evening cooking time prior (+20%)');
+      signals.push('Afternoon/evening prep & cooking time prior (+20%)');
     } else if ((m.key === 'movie_night' || m.key === 'late_night_cravings') && (currentHour >= 19 || currentHour <= 1)) {
       score += 0.15;
       signals.push('Late evening snack time prior (+15%)');
@@ -221,7 +227,7 @@ export async function detectMission(cartId?: string, sessionId?: string): Promis
 }
 
 export async function getMissionRecommendations(missionKey?: string, cartId?: string) {
-  let cartSubcategories = new Set<string>();
+  const cartSubcategories = new Set<string>();
   if (cartId) {
     const cart = await prisma.cart.findUnique({
       where: { id: cartId },
@@ -229,6 +235,25 @@ export async function getMissionRecommendations(missionKey?: string, cartId?: st
     });
     if (cart) {
       cart.items.forEach((i: any) => cartSubcategories.add(i.product.subcategory));
+    }
+  }
+
+  const clusterDef = missionKey ? MISSION_CLUSTER_MAP[missionKey] : null;
+  if (clusterDef) {
+    const missingClusters = getMissingClusters(cartSubcategories, missionKey!, true);
+    const targetSubcategories = missingClusters.flatMap((c) => c.catalogSubcategories);
+    const uniqueSubs = [...new Set(targetSubcategories)].filter((sub) => !cartSubcategories.has(sub));
+
+    if (uniqueSubs.length > 0) {
+      const clusterProducts = await prisma.product.findMany({
+        where: {
+          subcategory: { in: uniqueSubs },
+          stockQty: { gt: 0 },
+        },
+        take: 8,
+        include: { category: true },
+      });
+      if (clusterProducts.length > 0) return clusterProducts;
     }
   }
 
@@ -245,7 +270,6 @@ export async function getMissionRecommendations(missionKey?: string, cartId?: st
     });
   }
 
-  // Fallback to popular products if no mission recommendations found
   if (products.length === 0) {
     products = await prisma.product.findMany({
       where: {
@@ -258,6 +282,10 @@ export async function getMissionRecommendations(missionKey?: string, cartId?: st
   }
 
   return products;
+}
+
+export function getMissionClusterConfig(missionKey?: string) {
+  return getMissionClusters(missionKey);
 }
 
 export async function getMissionCompletion(cartId?: string, missionKey?: string) {
@@ -290,12 +318,44 @@ export async function getMissionCompletion(cartId?: string, missionKey?: string)
     return { completionPercentage: 100, missingSlots: [], suggestedItems: [], mission: null };
   }
 
+  const activeSubcategories = new Set(cart.items.map((i: any) => i.product.subcategory));
+  const clusterDef = MISSION_CLUSTER_MAP[targetMission.key];
+
+  if (clusterDef) {
+    const coreClusters = clusterDef.clusters.filter((c) => !c.isAdjacent);
+    const filledClusters = coreClusters.filter((c) => isClusterFilled(activeSubcategories, c));
+    const missingClusterList = coreClusters.filter((c) => !isClusterFilled(activeSubcategories, c));
+
+    const completionPercentage =
+      coreClusters.length === 0
+        ? 100
+        : Math.min(100, Math.round((filledClusters.length / coreClusters.length) * 100));
+
+    const missingSlots = missingClusterList.map((c) => c.name);
+    const missingSubcategories = [...new Set(missingClusterList.flatMap((c) => c.catalogSubcategories))];
+
+    const missingProducts = await prisma.product.findMany({
+      where: {
+        subcategory: { in: missingSubcategories },
+        stockQty: { gt: 0 },
+      },
+      take: 3,
+      include: { category: true },
+    });
+
+    return {
+      mission: targetMission,
+      completionPercentage,
+      missingSlots: completionPercentage === 100 ? [] : missingSlots,
+      missingClusters: completionPercentage === 100 ? [] : missingClusterList.map((c) => c.id),
+      suggestedItems: completionPercentage === 100 ? [] : missingProducts,
+    };
+  }
+
   const checklist = parseArrayField(targetMission.checklistCategories);
   if (checklist.length === 0) {
     return { completionPercentage: 100, missingSlots: [], suggestedItems: [], mission: targetMission };
   }
-
-  const activeSubcategories = new Set(cart.items.map((i: any) => i.product.subcategory));
 
   let filledSlots = 0;
   const missingSlots: string[] = [];
@@ -310,7 +370,6 @@ export async function getMissionCompletion(cartId?: string, missionKey?: string)
 
   const completionPercentage = Math.min(100, Math.round((filledSlots / checklist.length) * 100));
 
-  // Fetch top 3 in-stock one-tap add suggested items from missing slots (stockQty > 0)
   const missingProducts = await prisma.product.findMany({
     where: {
       subcategory: { in: missingSlots },

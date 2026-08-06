@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { MockEngine } from './mockEngine';
+import { MISSION_CLUSTER_DEFINITIONS, MISSION_CLUSTER_MAP } from './missionClusters';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api';
 
@@ -129,6 +130,14 @@ function handleMockRoute(method: string, url: string, payload?: any, params?: an
 
   if (cleanUrl === '/mission/recommendations' && method === 'GET') {
     return MockEngine.getMissionRecommendations(mission, cartId);
+  }
+
+  if (cleanUrl === '/mission/clusters' && method === 'GET') {
+    if (mission) {
+      const def = MISSION_CLUSTER_MAP[mission];
+      return def ? [def] : [];
+    }
+    return MISSION_CLUSTER_DEFINITIONS;
   }
 
   // Events logging
