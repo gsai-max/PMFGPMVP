@@ -350,6 +350,24 @@ export const MISSION_CLUSTER_MAP = Object.fromEntries(
 // Fallback for legacy key
 MISSION_CLUSTER_MAP['dinner_prep'] = MISSION_CLUSTER_MAP['meal_prep'];
 
+export function findClusterByFilter(missionKey: string, filterValue?: string | null): MissionCluster | null {
+  if (!filterValue) return null;
+  const def = MISSION_CLUSTER_MAP[missionKey];
+  if (!def) return null;
+  const q = filterValue.toLowerCase().trim();
+
+  return (
+    def.clusters.find((c) => {
+      if (c.id.toLowerCase() === q) return true;
+      if (c.searchQuery.toLowerCase() === q) return true;
+      if (c.name.toLowerCase() === q) return true;
+      if (c.name.toLowerCase().includes(q)) return true;
+      if (q.includes(c.searchQuery.toLowerCase())) return true;
+      return false;
+    }) || null
+  );
+}
+
 export function isClusterFilled(cartSubcategories: Set<string>, cluster: MissionCluster): boolean {
   return cluster.catalogSubcategories.some((sub) => cartSubcategories.has(sub));
 }

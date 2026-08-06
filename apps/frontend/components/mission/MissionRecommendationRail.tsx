@@ -4,8 +4,45 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { api } from '../../lib/api';
 import { MOCK_PRODUCTS } from '../../lib/mockData';
+import { findClusterByFilter } from '../../lib/missionClusters';
 import { useCartStore } from '../../store/cartStore';
 import { ProductCard } from '../ui/ProductCard';
+
+function getFallbackRecommendations(missionKey: string, filterValue?: string | null) {
+  if (filterValue) {
+    const matchedCluster = findClusterByFilter(missionKey, filterValue);
+    if (matchedCluster) {
+      const clusterSubs = matchedCluster.catalogSubcategories.map((s) => s.toLowerCase());
+      const examples = matchedCluster.productExamples.map((e) => e.toLowerCase());
+      const q = filterValue.toLowerCase();
+
+      const matched = MOCK_PRODUCTS.filter((p) => {
+        const pSub = (p.subcategory || '').toLowerCase();
+        const pName = (p.name || '').toLowerCase();
+        const pDesc = (p.description || '').toLowerCase();
+
+        if (clusterSubs.some((sub) => pSub.includes(sub) || sub.includes(pSub))) return true;
+        if (examples.some((ex) => pName.includes(ex) || pDesc.includes(ex))) return true;
+        if (pName.includes(q) || pSub.includes(q)) return true;
+
+        return false;
+      });
+
+      if (matched.length > 0) return matched;
+    }
+
+    const q = filterValue.toLowerCase();
+    const directMatch = MOCK_PRODUCTS.filter((p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.subcategory?.toLowerCase().includes(q) ||
+      p.description?.toLowerCase().includes(q)
+    );
+    if (directMatch.length > 0) return directMatch;
+  }
+
+  const missionMatched = MOCK_PRODUCTS.filter((p) => p.missionTags?.includes(missionKey));
+  return missionMatched.length > 0 ? missionMatched : MOCK_PRODUCTS.slice(0, 6);
+}
 
 export const MissionRecommendationRail: React.FC = () => {
   const { detectedMission, selectedMissionKey, activeSubcategoryFilter, cartId } = useCartStore();
@@ -24,26 +61,11 @@ export const MissionRecommendationRail: React.FC = () => {
         if (res.data && Array.isArray(res.data) && res.data.length > 0) {
           setRecommendations(res.data);
         } else {
-          // Fallback mock filtering
-          let filtered = MOCK_PRODUCTS.filter((p) => p.missionTags?.includes(activeMissionKey));
-          if (activeSubcategoryFilter) {
-            filtered = MOCK_PRODUCTS.filter((p) => 
-              p.name.toLowerCase().includes(activeSubcategoryFilter.toLowerCase()) ||
-              p.subcategory?.toLowerCase().includes(activeSubcategoryFilter.toLowerCase())
-            );
-          }
-          setRecommendations(filtered.length > 0 ? filtered : MOCK_PRODUCTS.slice(0, 6));
+          setRecommendations(getFallbackRecommendations(activeMissionKey, activeSubcategoryFilter));
         }
       })
       .catch(() => {
-        let filtered = MOCK_PRODUCTS.filter((p) => p.missionTags?.includes(activeMissionKey));
-        if (activeSubcategoryFilter) {
-          filtered = MOCK_PRODUCTS.filter((p) => 
-            p.name.toLowerCase().includes(activeSubcategoryFilter.toLowerCase()) ||
-            p.subcategory?.toLowerCase().includes(activeSubcategoryFilter.toLowerCase())
-          );
-        }
-        setRecommendations(filtered.length > 0 ? filtered : MOCK_PRODUCTS.slice(0, 6));
+        setRecommendations(getFallbackRecommendations(activeMissionKey, activeSubcategoryFilter));
       });
   }, [activeMissionKey, activeSubcategoryFilter, cartId]);
 

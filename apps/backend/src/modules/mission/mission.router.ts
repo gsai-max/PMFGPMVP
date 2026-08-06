@@ -34,8 +34,8 @@ router.get('/mission/detect', async (req: Request, res: Response) => {
 // GET /api/mission/recommendations
 router.get('/mission/recommendations', async (req: Request, res: Response) => {
   try {
-    const { mission, cartId } = req.query;
-    const recommendations = await getMissionRecommendations(mission as string, cartId as string);
+    const { mission, cartId, q } = req.query;
+    const recommendations = await getMissionRecommendations(mission as string, cartId as string, q as string);
     res.json(recommendations);
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to fetch mission recommendations' });
