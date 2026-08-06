@@ -242,31 +242,48 @@ export async function getMissionRecommendations(missionKey?: string, cartId?: st
   // If a specific subcategory cluster filter or search query is provided
   if (query && missionKey) {
     const matchedCluster = findClusterByFilter(missionKey, query);
-    const orConditions: any[] = [];
 
     if (matchedCluster) {
+      const orConditions: any[] = [];
       if (matchedCluster.catalogSubcategories.length > 0) {
         orConditions.push({ subcategory: { in: matchedCluster.catalogSubcategories } });
       }
       for (const ex of matchedCluster.productExamples) {
-        orConditions.push({ name: { contains: ex } });
-        orConditions.push({ description: { contains: ex } });
+        if (ex.length > 2) {
+          orConditions.push({ name: { contains: ex } });
+          orConditions.push({ description: { contains: ex } });
+        }
       }
+
+      if (orConditions.length > 0) {
+        const filterProducts = await prisma.product.findMany({
+          where: {
+            OR: orConditions,
+            stockQty: { gt: 0 },
+          },
+          take: 12,
+          include: { category: true },
+        });
+
+        if (filterProducts.length > 0) return filterProducts;
+      }
+    } else {
+      // Direct raw query search if no recognized cluster matched
+      const filterProducts = await prisma.product.findMany({
+        where: {
+          OR: [
+            { name: { contains: query } },
+            { subcategory: { contains: query } },
+            { description: { contains: query } },
+          ],
+          stockQty: { gt: 0 },
+        },
+        take: 12,
+        include: { category: true },
+      });
+
+      if (filterProducts.length > 0) return filterProducts;
     }
-
-    orConditions.push({ name: { contains: query } });
-    orConditions.push({ subcategory: { contains: query } });
-
-    const filterProducts = await prisma.product.findMany({
-      where: {
-        OR: orConditions,
-        stockQty: { gt: 0 },
-      },
-      take: 12,
-      include: { category: true },
-    });
-
-    if (filterProducts.length > 0) return filterProducts;
   }
 
   const clusterDef = missionKey ? MISSION_CLUSTER_MAP[missionKey] : null;

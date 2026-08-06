@@ -14,16 +14,17 @@ function getFallbackRecommendations(missionKey: string, filterValue?: string | n
     if (matchedCluster) {
       const clusterSubs = matchedCluster.catalogSubcategories.map((s) => s.toLowerCase());
       const examples = matchedCluster.productExamples.map((e) => e.toLowerCase());
-      const q = filterValue.toLowerCase();
 
       const matched = MOCK_PRODUCTS.filter((p) => {
         const pSub = (p.subcategory || '').toLowerCase();
         const pName = (p.name || '').toLowerCase();
         const pDesc = (p.description || '').toLowerCase();
 
+        // 1. Strict match on catalog subcategories
         if (clusterSubs.some((sub) => pSub.includes(sub) || sub.includes(pSub))) return true;
-        if (examples.some((ex) => pName.includes(ex) || pDesc.includes(ex))) return true;
-        if (pName.includes(q) || pSub.includes(q)) return true;
+
+        // 2. Match specific product example keywords (excluding generic short words)
+        if (examples.some((ex) => ex.length > 2 && (pName.includes(ex) || pDesc.includes(ex)))) return true;
 
         return false;
       });
@@ -31,6 +32,7 @@ function getFallbackRecommendations(missionKey: string, filterValue?: string | n
       if (matched.length > 0) return matched;
     }
 
+    // Direct search query match ONLY if no cluster was matched
     const q = filterValue.toLowerCase();
     const directMatch = MOCK_PRODUCTS.filter((p) =>
       p.name.toLowerCase().includes(q) ||
