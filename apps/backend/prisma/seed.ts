@@ -17,15 +17,9 @@ const MISSIONS = [
   },
   {
     key: 'meal_prep',
-    displayName: 'Kitchen Meal Prep 🔪',
+    displayName: 'Meal Prep 🍳',
     checklistCategories: getCoreChecklistSubcategories('meal_prep'),
-    icon: '🔪',
-  },
-  {
-    key: 'dinner_prep',
-    displayName: 'Dinner Cooking 🥗',
-    checklistCategories: getCoreChecklistSubcategories('dinner_prep'),
-    icon: '🥗',
+    icon: '🍳',
   },
   {
     key: 'monthly_grocery',

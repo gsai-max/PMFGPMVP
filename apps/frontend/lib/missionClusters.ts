@@ -71,8 +71,8 @@ export const MISSION_CLUSTER_DEFINITIONS: MissionClusterDefinition[] = [
   },
   {
     key: 'meal_prep',
-    displayName: 'Kitchen Meal Prep',
-    icon: '🔪',
+    displayName: 'Meal Prep & Cooking',
+    icon: '🍳',
     clusters: [
       {
         id: 'produce',
@@ -80,11 +80,11 @@ export const MISSION_CLUSTER_DEFINITIONS: MissionClusterDefinition[] = [
         icon: '🥬',
         catalogSubcategories: ['Fresh Vegetables', 'Fresh Fruits', 'Herbs & Seasonings'],
         searchQuery: 'onion',
-        productExamples: ['vegetables', 'fruits', 'herbs'],
+        productExamples: ['vegetables', 'fruits', 'herbs', 'tomatoes'],
       },
       {
         id: 'proteins',
-        name: 'Proteins (Paneer, Eggs, Tofu)',
+        name: 'Proteins (Paneer, Eggs, Tofu, Meat)',
         icon: '🍗',
         catalogSubcategories: ['Eggs & Paneer'],
         searchQuery: 'paneer',
@@ -92,75 +92,35 @@ export const MISSION_CLUSTER_DEFINITIONS: MissionClusterDefinition[] = [
       },
       {
         id: 'pantry_basics',
-        name: 'Pantry Basics (Oil, Atta, Rice, Spices)',
+        name: 'Pantry Staples & Grains (Atta, Rice, Dal)',
         icon: '🌾',
-        catalogSubcategories: ['Spices & Oils', 'Flours & Grains', 'Pulses & Dal'],
+        catalogSubcategories: ['Flours & Grains', 'Pulses & Dal', 'Spices & Oils'],
         searchQuery: 'atta',
-        productExamples: ['oil', 'atta', 'rice', 'spices', 'salt'],
-      },
-      {
-        id: 'tools_storage',
-        name: 'Tools & Storage (Wrap, Containers)',
-        icon: '🔪',
-        catalogSubcategories: ['Disposables'],
-        searchQuery: 'wrap',
-        productExamples: ['chopping board', 'cling wrap', 'containers'],
-      },
-      {
-        id: 'adjacent_gap',
-        name: 'Adjacent Gap (Kitchen Gloves, Trash Bags)',
-        icon: '🧤',
-        catalogSubcategories: ['Disposables', 'Cleaners & Fresheners'],
-        searchQuery: 'gloves',
-        productExamples: ['kitchen gloves', 'garbage bags', 'aprons'],
-        isAdjacent: true,
-      },
-    ],
-  },
-  {
-    key: 'dinner_prep',
-    displayName: 'Dinner Cooking',
-    icon: '🥗',
-    clusters: [
-      {
-        id: 'core_ingredients',
-        name: 'Core Ingredients (Rice, Dal, Veggies, Protein)',
-        icon: '🍚',
-        catalogSubcategories: ['Flours & Grains', 'Pulses & Dal', 'Fresh Vegetables', 'Eggs & Paneer'],
-        searchQuery: 'dal',
-        productExamples: ['rice', 'roti staples', 'dal', 'vegetables', 'meat', 'fish'],
+        productExamples: ['oil', 'atta', 'rice', 'dal', 'salt'],
       },
       {
         id: 'spices_masalas',
-        name: 'Spices & Masalas (Garam Masala, Pastes)',
+        name: 'Spices, Masalas & Oils (Ghee, Curry Pastes)',
         icon: '🌶️',
         catalogSubcategories: ['Spices & Oils', 'Herbs & Seasonings'],
         searchQuery: 'masala',
-        productExamples: ['garam masala', 'curry pastes', 'ready masalas'],
+        productExamples: ['garam masala', 'curry pastes', 'ghee', 'cooking oil'],
       },
       {
-        id: 'cooking_essentials',
-        name: 'Essentials (Ghee, Oil, Coconut Milk)',
-        icon: '🫕',
-        catalogSubcategories: ['Spices & Oils', 'Milk & Curd'],
-        searchQuery: 'ghee',
-        productExamples: ['ghee', 'oil', 'cooking cream', 'coconut milk'],
-      },
-      {
-        id: 'accompaniments',
-        name: 'Accompaniments (Pickles, Papad, Curd)',
+        id: 'accompaniments_storage',
+        name: 'Accompaniments & Storage (Curd, Wrap, Foil)',
         icon: '🥒',
-        catalogSubcategories: ['Spices & Oils', 'Milk & Curd', 'Cookies & Biscuits'],
+        catalogSubcategories: ['Milk & Curd', 'Disposables'],
         searchQuery: 'curd',
-        productExamples: ['pickles', 'papad', 'curd'],
+        productExamples: ['curd', 'pickles', 'cling wrap', 'containers'],
       },
       {
         id: 'adjacent_gap',
-        name: 'Adjacent Gap (Dishwash & Storage)',
-        icon: '🧽',
-        catalogSubcategories: ['Cleaners & Fresheners', 'Disposables'],
-        searchQuery: 'dishwash',
-        productExamples: ['dishwashing liquid', 'food storage containers'],
+        name: 'Adjacent Gap (Kitchen Gloves, Dish Soap)',
+        icon: '🧤',
+        catalogSubcategories: ['Disposables', 'Cleaners & Fresheners'],
+        searchQuery: 'gloves',
+        productExamples: ['kitchen gloves', 'garbage bags', 'dishwashing liquid'],
         isAdjacent: true,
       },
     ],
@@ -386,6 +346,9 @@ export const MISSION_CLUSTER_DEFINITIONS: MissionClusterDefinition[] = [
 export const MISSION_CLUSTER_MAP = Object.fromEntries(
   MISSION_CLUSTER_DEFINITIONS.map((m) => [m.key, m])
 ) as Record<string, MissionClusterDefinition>;
+
+// Fallback for legacy key
+MISSION_CLUSTER_MAP['dinner_prep'] = MISSION_CLUSTER_MAP['meal_prep'];
 
 export function isClusterFilled(cartSubcategories: Set<string>, cluster: MissionCluster): boolean {
   return cluster.catalogSubcategories.some((sub) => cartSubcategories.has(sub));

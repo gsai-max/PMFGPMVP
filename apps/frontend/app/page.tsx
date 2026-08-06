@@ -14,8 +14,7 @@ import { useCartStore } from '../store/cartStore';
 
 const QUICK_MISSIONS = [
   { key: 'breakfast', name: 'Breakfast Prep', icon: Coffee, bg: 'bg-amber-500', sampleQuery: 'milk' },
-  { key: 'meal_prep', name: 'Kitchen Meal Prep', icon: Utensils, bg: 'bg-teal-600', sampleQuery: 'onion' },
-  { key: 'dinner_prep', name: 'Dinner Cooking', icon: Utensils, bg: 'bg-emerald-600', sampleQuery: 'atta' },
+  { key: 'meal_prep', name: 'Meal Prep', icon: Utensils, bg: 'bg-teal-600', sampleQuery: 'onion' },
   { key: 'monthly_grocery', name: 'Monthly Restock', icon: ShoppingCart, bg: 'bg-blue-600', sampleQuery: 'rice' },
   { key: 'movie_night', name: 'Movie Night', icon: Film, bg: 'bg-purple-600', sampleQuery: 'chips' },
   { key: 'guest_arrival', name: 'Hosting Guests', icon: Users, bg: 'bg-orange-500', sampleQuery: 'coca-cola' },
